@@ -33,6 +33,7 @@ export default function NexVibeApp() {
   const [showUpload, setShowUpload] = useState(false);
   const [showClipShare, setShowClipShare] = useState(false);
   const [isWatchParty, setIsWatchParty] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -72,10 +73,17 @@ export default function NexVibeApp() {
 
   return (
     <div className="min-h-screen bg-background text-white">
-      <Navbar onUploadClick={() => setShowUpload(true)} />
-      <Sidebar activeView={view} setView={setView} />
+      <Navbar 
+        onUploadClick={() => setShowUpload(true)} 
+        onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
+      <Sidebar 
+        activeView={view} 
+        setView={setView} 
+        isCollapsed={isSidebarCollapsed}
+      />
 
-      <main className="lg:pl-64 pt-16 min-h-screen">
+      <main className={`${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'} pt-16 min-h-screen transition-all duration-300`}>
         <div className="max-w-[1800px] mx-auto">
           <AnimatePresence mode="wait">
             {view === 'home' && (

@@ -23,10 +23,22 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 
-export const Navbar = ({ onUploadClick }: { onUploadClick?: () => void }) => {
+export const Navbar = ({ 
+  onUploadClick, 
+  onToggleSidebar 
+}: { 
+  onUploadClick?: () => void,
+  onToggleSidebar?: () => void
+}) => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[60] glass-panel h-16 px-4 md:px-6 flex items-center justify-between border-b border-white/5">
       <div className="flex items-center gap-4 md:gap-8">
+        <button 
+          onClick={onToggleSidebar}
+          className="p-2 rounded-xl hover:bg-white/5 text-text-secondary hover:text-white transition-all hidden lg:block"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
         <button className="p-2 rounded-full hover:bg-white/5 text-text-secondary hover:text-white transition-all lg:hidden">
           <Menu className="w-6 h-6" />
         </button>
@@ -79,7 +91,15 @@ export const Navbar = ({ onUploadClick }: { onUploadClick?: () => void }) => {
   );
 };
 
-export const Sidebar = ({ activeView, setView }: { activeView: string, setView: (v: any) => void }) => {
+export const Sidebar = ({ 
+  activeView, 
+  setView,
+  isCollapsed 
+}: { 
+  activeView: string, 
+  setView: (v: any) => void,
+  isCollapsed?: boolean
+}) => {
   const menuItems = [
     { id: 'home', icon: HomeIcon, label: 'Home', href: '/' },
     { id: 'trending', icon: TrendingUp, label: 'Trending' },
@@ -97,12 +117,12 @@ export const Sidebar = ({ activeView, setView }: { activeView: string, setView: 
   const renderItem = (item: any) => {
     const content = (
       <>
-        <item.icon className={`w-5 h-5 ${activeView === item.id ? 'text-accent-purple' : ''}`} />
-        <span className="text-sm">{item.label}</span>
+        <item.icon className={`w-5 h-5 flex-shrink-0 ${activeView === item.id ? 'text-accent-purple' : ''}`} />
+        {!isCollapsed && <span className="text-sm truncate">{item.label}</span>}
       </>
     );
     
-    const className = `w-full flex items-center gap-4 px-4 py-2.5 rounded-xl transition-all ${
+    const className = `w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-4 px-4'} py-3 rounded-xl transition-all ${
       activeView === item.id 
         ? 'bg-white/10 text-white font-bold' 
         : 'text-text-secondary hover:bg-white/5 hover:text-white'
@@ -110,7 +130,7 @@ export const Sidebar = ({ activeView, setView }: { activeView: string, setView: 
 
     if (item.href) {
       return (
-        <Link key={item.id} href={item.href} className={className}>
+        <Link key={item.id} href={item.href} title={isCollapsed ? item.label : ''} className={className}>
           {content}
         </Link>
       );
@@ -120,6 +140,7 @@ export const Sidebar = ({ activeView, setView }: { activeView: string, setView: 
       <button 
         key={item.id}
         onClick={() => setView(item.id)}
+        title={isCollapsed ? item.label : ''}
         className={className}
       >
         {content}
@@ -128,24 +149,24 @@ export const Sidebar = ({ activeView, setView }: { activeView: string, setView: 
   };
 
   return (
-    <aside className="fixed left-0 top-16 bottom-0 w-64 hidden lg:flex flex-col p-3 border-r border-white/5 bg-background overflow-y-auto no-scrollbar">
+    <aside className={`fixed left-0 top-16 bottom-0 ${isCollapsed ? 'w-20' : 'w-64'} hidden lg:flex flex-col p-3 border-r border-white/5 bg-background overflow-y-auto no-scrollbar transition-all duration-300`}>
       <div className="space-y-1">
         {menuItems.map(renderItem)}
       </div>
 
       <div className="mt-6 pt-6 border-t border-white/5">
-        <h3 className="px-4 text-[10px] font-bold uppercase tracking-widest text-text-secondary mb-3">Library</h3>
+        {!isCollapsed && <h3 className="px-4 text-[10px] font-bold uppercase tracking-widest text-text-secondary mb-3">Library</h3>}
         <div className="space-y-1">
           {libraryItems.map(renderItem)}
         </div>
       </div>
 
       <div className="mt-6 pt-6 border-t border-white/5">
-        <h3 className="px-4 text-[10px] font-bold uppercase tracking-widest text-text-secondary mb-3">Subscriptions</h3>
-        <div className="space-y-2 px-2">
+        {!isCollapsed && <h3 className="px-4 text-[10px] font-bold uppercase tracking-widest text-text-secondary mb-3">Subscriptions</h3>}
+        <div className={`space-y-2 ${isCollapsed ? 'px-0' : 'px-2'}`}>
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-center gap-3 px-2 py-1.5 rounded-xl hover:bg-white/5 cursor-pointer group">
-              <div className="w-8 h-8 rounded-full bg-surface border border-white/10 overflow-hidden">
+            <div key={i} title={isCollapsed ? `Neural Frontier ${i}` : ''} className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-2'} py-1.5 rounded-xl hover:bg-white/5 cursor-pointer group`}>
+              <div className="w-8 h-8 rounded-full bg-surface border border-white/10 overflow-hidden flex-shrink-0">
                 <Image 
                   src={`https://picsum.photos/seed/creator${i}/100/100`} 
                   alt="Creator" 
@@ -155,17 +176,24 @@ export const Sidebar = ({ activeView, setView }: { activeView: string, setView: 
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="text-sm text-text-secondary group-hover:text-white transition-colors">Neural Frontier {i}</span>
-              <div className="ml-auto w-1.5 h-1.5 rounded-full bg-accent-purple"></div>
+              {!isCollapsed && (
+                <>
+                  <span className="text-sm text-text-secondary group-hover:text-white transition-colors truncate">Neural Frontier {i}</span>
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-accent-purple"></div>
+                </>
+              )}
             </div>
           ))}
         </div>
       </div>
 
       <div className="mt-auto pt-4 border-t border-white/5">
-        <button className="w-full flex items-center gap-4 px-4 py-2.5 rounded-xl text-text-secondary hover:bg-destructive/10 hover:text-destructive transition-all">
-          <LogOut className="w-5 h-5" />
-          <span className="text-sm">Sign Out</span>
+        <button 
+          title={isCollapsed ? 'Sign Out' : ''}
+          className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-4 px-4'} py-2.5 rounded-xl text-text-secondary hover:bg-destructive/10 hover:text-destructive transition-all`}
+        >
+          <LogOut className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span className="text-sm">Sign Out</span>}
         </button>
       </div>
     </aside>
