@@ -44,7 +44,7 @@ const MOCK_CHART_DATA = Array.from({ length: 24 }).map((_, i) => ({
 }));
 
 export const CreatorDashboard = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'analytics' | 'ai-tools' | 'community' | 'monetization' | 'copyright'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'analytics' | 'ai-tools' | 'knowledge' | 'community' | 'monetization' | 'copyright'>('overview');
   const [selectedDetail, setSelectedDetail] = useState<string | null>(null);
 
   const stats = [
