@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Play, 
@@ -17,15 +18,34 @@ import {
   Share2,
   Heart,
   MoreHorizontal,
-  Zap
+  Zap,
+  Monitor,
+  Check,
+  ChevronRight,
+  Copy,
+  Globe
 } from 'lucide-react';
 
-export const CustomVideoPlayer = ({ onClipClick, onWatchPartyClick }: { onClipClick?: () => void, onWatchPartyClick?: () => void }) => {
+export const CustomVideoPlayer = ({ 
+  onClipClick, 
+  onWatchPartyClick,
+  isCinemaMode,
+  onToggleCinemaMode
+}: { 
+  onClipClick?: () => void, 
+  onWatchPartyClick?: () => void,
+  isCinemaMode?: boolean,
+  onToggleCinemaMode?: () => void
+}) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(1);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
+  const [quality, setQuality] = useState('1080p');
+  const [playbackSpeed, setPlaybackSpeed] = useState('1x');
+  
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -85,7 +105,7 @@ export const CustomVideoPlayer = ({ onClipClick, onWatchPartyClick }: { onClipCl
   return (
     <div 
       ref={containerRef}
-      className="relative w-full aspect-video rounded-3xl overflow-hidden bg-black group border border-white/10 shadow-2xl"
+      className={`relative w-full ${isCinemaMode ? 'aspect-[21/9]' : 'aspect-video'} rounded-3xl overflow-hidden bg-black group border border-white/10 shadow-2xl transition-all duration-500`}
     >
       {/* Real Video Element */}
       <video
@@ -135,6 +155,59 @@ export const CustomVideoPlayer = ({ onClipClick, onWatchPartyClick }: { onClipCl
         )}
       </AnimatePresence>
 
+      {/* Settings Menu */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="absolute bottom-24 right-6 w-64 glass-panel border border-white/10 rounded-2xl p-2 z-[70] shadow-2xl"
+          >
+            <div className="space-y-1">
+              <div className="px-3 py-2 text-[10px] font-black text-text-secondary uppercase tracking-widest border-b border-white/5 mb-1">
+                Playback Settings
+              </div>
+              
+              <button className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/5 transition-all group">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-accent-purple/20 transition-colors">
+                    <Monitor className="w-4 h-4 text-text-secondary group-hover:text-accent-purple" />
+                  </div>
+                  <span className="text-xs font-bold text-white">Quality</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-accent-purple">{quality}</span>
+                  <ChevronRight className="w-3 h-3 text-text-secondary" />
+                </div>
+              </button>
+
+              <button className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/5 transition-all group">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-accent-purple/20 transition-colors">
+                    <Zap className="w-4 h-4 text-text-secondary group-hover:text-accent-purple" />
+                  </div>
+                  <span className="text-xs font-bold text-white">Speed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-accent-purple">{playbackSpeed}</span>
+                  <ChevronRight className="w-3 h-3 text-text-secondary" />
+                </div>
+              </button>
+              
+              <div className="mt-2 pt-2 border-t border-white/5 px-3 pb-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">AI Subtitles</span>
+                  <div className="w-8 h-4 bg-accent-purple rounded-full relative cursor-pointer">
+                    <div className="absolute right-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Controls Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-6">
         <div className="flex items-center justify-between">
@@ -145,7 +218,19 @@ export const CustomVideoPlayer = ({ onClipClick, onWatchPartyClick }: { onClipCl
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="p-2 rounded-xl hover:bg-white/10 transition-all border border-white/5"><Settings className="w-5 h-5 text-white" /></button>
+            <button 
+              onClick={() => setShowSettings(!showSettings)}
+              className={`p-2 rounded-xl transition-all border border-white/5 ${showSettings ? 'bg-accent-purple/20 border-accent-purple/30 text-accent-purple' : 'hover:bg-white/10 text-white'}`}
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={onToggleCinemaMode}
+              className={`p-2 rounded-xl transition-all border border-white/5 ${isCinemaMode ? 'bg-accent-purple/20 border-accent-purple/30 text-accent-purple' : 'hover:bg-white/10 text-white'}`}
+              title="Cinema Mode"
+            >
+              <Monitor className="w-5 h-5" />
+            </button>
             <button 
               onClick={toggleFullscreen}
               className="p-2 rounded-xl hover:bg-white/10 transition-all border border-white/5"
@@ -239,6 +324,16 @@ export const CustomVideoPlayer = ({ onClipClick, onWatchPartyClick }: { onClipCl
 };
 
 export const VideoInfo = () => {
+  const [isLiked, setIsLiked] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="mt-6 space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -256,15 +351,59 @@ export const VideoInfo = () => {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5">
-            <Heart className="w-4 h-4" />
-            <span className="text-sm font-medium">42K</span>
+        <div className="flex items-center gap-2 relative">
+          <button 
+            onClick={() => setIsLiked(!isLiked)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all border ${isLiked ? 'bg-accent-purple/20 border-accent-purple/30 text-accent-purple ai-glow' : 'bg-white/5 border-white/5 hover:bg-white/10 text-white'}`}
+          >
+            <Heart className={`w-4 h-4 ${isLiked ? 'fill-accent-purple' : ''}`} />
+            <span className="text-sm font-medium">{isLiked ? '42.1K' : '42K'}</span>
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5">
-            <Share2 className="w-4 h-4" />
-            <span className="text-sm font-medium">Share</span>
-          </button>
+          
+          <div className="relative">
+            <button 
+              onClick={() => setShowShare(!showShare)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all border ${showShare ? 'bg-accent-blue/20 border-accent-blue/30 text-accent-blue' : 'bg-white/5 border-white/5 hover:bg-white/10 text-white'}`}
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="text-sm font-medium">Share</span>
+            </button>
+
+            <AnimatePresence>
+              {showShare && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute top-full right-0 mt-2 w-72 glass-panel border border-white/10 rounded-2xl p-4 z-[70] shadow-2xl"
+                >
+                  <h4 className="text-sm font-bold text-white mb-4">Share Intelligence</h4>
+                  <div className="flex gap-2 mb-4">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 cursor-pointer transition-all">
+                        <Globe className="w-4 h-4 text-text-secondary" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="relative flex items-center bg-black/40 rounded-xl p-2 border border-white/5">
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value="nexvibe.io/v/neural-future" 
+                      className="bg-transparent border-none focus:ring-0 text-[10px] text-text-secondary w-full truncate"
+                    />
+                    <button 
+                      onClick={handleCopy}
+                      className="p-1.5 rounded-lg bg-accent-purple/20 text-accent-purple border border-accent-purple/30 hover:bg-accent-purple/30 transition-all"
+                    >
+                      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <button className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-white/5">
             <MoreHorizontal className="w-5 h-5" />
           </button>
@@ -273,21 +412,23 @@ export const VideoInfo = () => {
 
       <div className="flex items-center justify-between p-4 rounded-2xl bg-surface border border-white/5">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full gradient-bg p-[1px]">
-            <div className="w-full h-full rounded-full bg-surface overflow-hidden relative">
-              <Image 
-                src="https://picsum.photos/seed/tech/100/100" 
-                alt="Creator" 
-                fill 
-                className="object-cover"
-                referrerPolicy="no-referrer"
-              />
+          <Link href="/creator/neural-frontier" className="flex items-center gap-4 group/creator">
+            <div className="w-12 h-12 rounded-full gradient-bg p-[1px] group-hover/creator:scale-110 transition-transform">
+              <div className="w-full h-full rounded-full bg-surface overflow-hidden relative">
+                <Image 
+                  src="https://picsum.photos/seed/tech/100/100" 
+                  alt="Creator" 
+                  fill 
+                  className="object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
             </div>
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-white">Neural Frontier</h3>
-            <p className="text-xs text-text-secondary">2.4M Subscribers</p>
-          </div>
+            <div>
+              <h3 className="text-base font-bold text-white group-hover/creator:text-accent-purple transition-colors">Neural Frontier</h3>
+              <p className="text-xs text-text-secondary">2.4M Subscribers</p>
+            </div>
+          </Link>
           <button className="ml-4 px-6 py-2 rounded-xl gradient-bg text-sm font-bold text-white hover:opacity-90 transition-all ai-glow">
             Subscribe
           </button>

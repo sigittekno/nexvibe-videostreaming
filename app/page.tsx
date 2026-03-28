@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { Navbar, Sidebar } from '@/components/Navigation';
 import { VideoCard, MoodSelector } from '@/components/VideoCard';
 import { CustomVideoPlayer, VideoInfo } from '@/components/VideoPlayer';
@@ -11,6 +11,7 @@ import { WatchParty } from '@/components/WatchParty';
 import { InvestmentPanel } from '@/components/InvestmentPanel';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { 
   Sparkles, 
   Brain, 
@@ -22,22 +23,100 @@ import {
   Home as HomeIcon,
   LayoutDashboard,
   User as UserIcon,
-  Search
+  Search,
+  ListVideo,
+  CheckCircle2
 } from 'lucide-react';
 
+import { Suspense } from 'react';
 import Image from 'next/image';
 
-export default function NexVibeApp() {
-  const [view, setView] = useState<'home' | 'watch' | 'profile' | 'trending'>('home');
-  const [isMounted, setIsMounted] = useState(false);
+function PlaylistSidebar() {
+  const playlistItems = [
+    { title: 'Neural Architecture 101: Introduction', duration: '12:42', active: true, completed: true },
+    { title: 'Understanding Synaptic Weights', duration: '15:10', active: false, completed: true },
+    { title: 'Backpropagation in Deep Learning', duration: '18:35', active: false, completed: false },
+    { title: 'Convolutional Neural Networks Explained', duration: '22:15', active: false, completed: false },
+    { title: 'Recurrent Networks and LSTMs', duration: '20:05', active: false, completed: false },
+    { title: 'Transformers: The New Era of AI', duration: '25:30', active: false, completed: false },
+    { title: 'Generative Adversarial Networks', duration: '19:45', active: false, completed: false },
+    { title: 'Reinforcement Learning Basics', duration: '21:20', active: false, completed: false },
+  ];
+
+  return (
+    <div className="flex flex-col h-full glass-panel rounded-3xl border border-white/10 overflow-hidden">
+      <div className="p-6 border-b border-white/10 bg-white/5">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <ListVideo className="w-4 h-4 text-accent-purple" />
+            Neural Architecture 101
+          </h3>
+          <span className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">1/12</span>
+        </div>
+        <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+          <div className="w-1/12 h-full bg-accent-purple ai-glow" />
+        </div>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+        {playlistItems.map((item, i) => (
+          <div 
+            key={i} 
+            className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer transition-all group ${
+              item.active ? 'bg-accent-purple/20 border border-accent-purple/30' : 'hover:bg-white/5 border border-transparent'
+            }`}
+          >
+            <div className="relative flex-shrink-0">
+              <div className="w-20 aspect-video rounded-lg overflow-hidden bg-white/5 relative">
+                <Image 
+                  src={`https://picsum.photos/seed/playlist-item-${i}/200/120`} 
+                  alt={item.title} 
+                  fill 
+                  className="object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+                  referrerPolicy="no-referrer"
+                />
+                {item.active && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-accent-purple/40">
+                    <PlayCircle className="w-6 h-6 text-white ai-glow" />
+                  </div>
+                )}
+              </div>
+              <div className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/80 text-[8px] font-bold text-white">
+                {item.duration}
+              </div>
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <h4 className={`text-xs font-bold line-clamp-2 transition-colors ${item.active ? 'text-accent-purple' : 'text-white group-hover:text-accent-purple'}`}>
+                {item.title}
+              </h4>
+              <div className="flex items-center gap-2 mt-1">
+                {item.completed && <CheckCircle2 className="w-3 h-3 text-success" />}
+                <span className="text-[10px] text-text-secondary uppercase tracking-widest">Part {i + 1}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function NexVibeAppContent() {
+  const searchParams = useSearchParams();
+  const currentViewParam = searchParams.get('view') as 'home' | 'watch' | 'profile' | 'trending' | null;
+  const [viewState, setViewState] = useState<'home' | 'watch' | 'profile' | 'trending'>('home');
+  
+  const view = currentViewParam || viewState;
+  const setView = (v: any) => setViewState(v);
+
   const [showUpload, setShowUpload] = useState(false);
   const [showClipShare, setShowClipShare] = useState(false);
   const [isWatchParty, setIsWatchParty] = useState(false);
+  const [isCinemaMode, setIsCinemaMode] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const isPlaylistMode = searchParams.get('playlist') === 'true';
 
   const recommendedVideos = [
     { title: "The Future of Neural Interfaces: Bridging Human Intelligence", creator: "Neural Frontier", views: "1.2M", time: "2 days ago", thumbnail: "https://picsum.photos/seed/neural/800/450", aiScore: 98, isLearning: true },
@@ -60,16 +139,6 @@ export default function NexVibeApp() {
     { label: 'Gaming', icon: Play },
     { label: 'Movies', icon: PlayCircle },
   ];
-
-  if (!isMounted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-12 h-12 rounded-lg gradient-bg flex items-center justify-center ai-glow animate-pulse">
-          <Sparkles className="w-6 h-6 text-white" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background text-white">
@@ -337,49 +406,60 @@ export default function NexVibeApp() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="p-4 md:p-6 lg:p-8 grid grid-cols-1 xl:grid-cols-12 gap-8"
+                className={`p-4 md:p-6 lg:p-8 ${isCinemaMode ? 'flex flex-col' : 'grid grid-cols-1 xl:grid-cols-12'} gap-8`}
               >
                 {/* Main Content */}
-                <div className="xl:col-span-8 space-y-6">
+                <div className={`${isCinemaMode ? 'w-full' : 'xl:col-span-8'} space-y-6`}>
                   <CustomVideoPlayer 
                     onClipClick={() => setShowClipShare(true)} 
                     onWatchPartyClick={() => setIsWatchParty(!isWatchParty)}
+                    isCinemaMode={isCinemaMode}
+                    onToggleCinemaMode={() => setIsCinemaMode(!isCinemaMode)}
                   />
-                  <VideoInfo />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <InvestmentPanel />
-                    <div className="space-y-6">
-                      <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-accent-purple" />
-                        AI Recommended Next
-                      </h3>
-                      {recommendedVideos.slice(0, 3).map((video, i) => (
-                        <div key={i} className="flex gap-4 group cursor-pointer">
-                          <div className="w-32 aspect-video rounded-xl overflow-hidden relative flex-shrink-0">
-                            <Image 
-                              src={video.thumbnail} 
-                              alt={video.title} 
-                              fill
-                              className="object-cover group-hover:scale-110 transition-transform"
-                              referrerPolicy="no-referrer"
-                            />
+                  
+                  <div className={`${isCinemaMode ? 'max-w-7xl mx-auto w-full' : ''} space-y-6`}>
+                    <VideoInfo />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <InvestmentPanel />
+                      <div className="space-y-6">
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-accent-purple" />
+                          AI Recommended Next
+                        </h3>
+                        {recommendedVideos.slice(0, 3).map((video, i) => (
+                          <div key={i} className="flex gap-4 group cursor-pointer">
+                            <div className="w-32 aspect-video rounded-xl overflow-hidden relative flex-shrink-0">
+                              <Image 
+                                src={video.thumbnail} 
+                                alt={video.title} 
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-bold text-white line-clamp-2 group-hover:text-accent-purple transition-colors">{video.title}</h4>
+                              <p className="text-xs text-text-secondary">{video.creator}</p>
+                            </div>
                           </div>
-                          <div className="space-y-1">
-                            <h4 className="text-sm font-bold text-white line-clamp-2 group-hover:text-accent-purple transition-colors">{video.title}</h4>
-                            <p className="text-xs text-text-secondary">{video.creator}</p>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Sidebar / AI Panel */}
-                <div className="xl:col-span-4 space-y-6">
-                  <div className="h-[600px]">
-                    {isWatchParty ? <WatchParty /> : <AIPilotPanel />}
+                <div className={`${isCinemaMode ? 'w-full max-w-7xl mx-auto' : 'xl:col-span-4'} space-y-6`}>
+                  <div className={`${isCinemaMode ? 'h-auto' : 'h-[600px]'}`}>
+                    {isPlaylistMode ? (
+                      <PlaylistSidebar />
+                    ) : isWatchParty ? (
+                      <WatchParty />
+                    ) : (
+                      <AIPilotPanel />
+                    )}
                   </div>
-                  {!isWatchParty && (
+                  {!isWatchParty && !isPlaylistMode && (
                     <div className="p-6 glass-panel rounded-3xl border border-white/10">
                       <h4 className="text-sm font-bold text-white mb-4">Video Intelligence Score</h4>
                       <div className="flex items-center gap-4">
@@ -487,5 +567,19 @@ export default function NexVibeApp() {
         {showClipShare && <ClipShare onClose={() => setShowClipShare(false)} />}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function NexVibeApp() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center text-white">
+        <div className="w-12 h-12 rounded-lg gradient-bg flex items-center justify-center ai-glow animate-pulse">
+          <Sparkles className="w-6 h-6 text-white" />
+        </div>
+      </div>
+    }>
+      <NexVibeAppContent />
+    </Suspense>
   );
 }
